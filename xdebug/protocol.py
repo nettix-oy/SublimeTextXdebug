@@ -245,7 +245,9 @@ class Protocol(object):
         """
         Create socket server which listens for connection on configured port.
         """
+        debug('(Protocol.listen) Begin')
         # Create socket server
+        debug('(Protocol.listen) Creating server socket')
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         if server:
@@ -253,7 +255,9 @@ class Protocol(object):
             try:
                 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server.settimeout(1)
+                debug('(Protocol.listen) Binding to port %s' % self.port)
                 server.bind(('', self.port))
+                debug('(Protocol.listen) Starting to listen for connections')
                 server.listen(1)
                 self.listening = True
                 self.socket = None
@@ -264,27 +268,32 @@ class Protocol(object):
             # Accept incoming connection on configured port
             while self.listening:
                 try:
+                    debug('(Protocol.listen) Trying to accept a client socket connection')
                     self.socket, address = server.accept()
                     self.listening = False
                 except socket.timeout:
-                    pass
+                    debug('(Protocol.listen) Timed out while trying to accept a client socket connection')
 
             # Check if a connection has been made
             if self.socket:
+                debug('(Protocol.listen) Successfully accepted a client socket connection')
                 self.connected = True
                 self.socket.settimeout(None)
             else:
+                debug('(Protocol.listen) Failed to accept a client socket connection')
                 self.connected = False
                 self.listening = False
 
             # Close socket server
             try:
+                debug('(Protocol.listen) Trying to close server socket')
                 server.close()
             except:
-                pass
+                debug('(Protocol.listen) Failed to close server socket')
             server = None
 
             # Return socket connection
+            debug('(Protocol.listen) Done')
             return self.socket
         else:
             raise ProtocolConnectionException('Could not create socket server.')
