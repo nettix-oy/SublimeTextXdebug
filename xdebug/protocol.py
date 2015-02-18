@@ -102,14 +102,17 @@ class Protocol(object):
         """
         Clear variables, reset transaction_id, close socket connection.
         """
+        debug('(Protocol.clear) Begin')
         self.buffer = ''
         self.connected = False
         self.listening = False
         del self.transaction_id
         try:
+            debug('(Protocol.clear) Trying to close socket')
             self.socket.close()
         except:
-            pass
+            debug('(Protocol.clear) Failed to close socket')
+        debug('(Protocol.clear) Done')
         self.socket = None
 
     def unescape(self, string):
