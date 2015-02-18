@@ -13,7 +13,7 @@ except:
 from .config import get_value
 
 
-def clear_output():
+def init_log_file():
     # Configure logging module
     output_file = os.path.join(sublime.packages_path(), 'User', S.FILE_LOG_OUTPUT)
     # The values for filemode are the same as for PHP's fopen()

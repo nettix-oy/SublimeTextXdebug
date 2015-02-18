@@ -11,13 +11,12 @@ except:
 # Load modules
 from .view import DATA_BREAKPOINT, DATA_CONTEXT, DATA_STACK, DATA_WATCH, TITLE_WINDOW_BREAKPOINT, TITLE_WINDOW_CONTEXT, TITLE_WINDOW_STACK, TITLE_WINDOW_WATCH, has_debug_view, render_regions, show_content
 from .util import load_breakpoint_data, load_watch_data
-from .log import clear_output, debug, info
+from .log import init_log_file, debug, info
 from .config import get_window_value, set_window_value, load_package_values, load_project_values
 
 
 def xdebug():
-    # Clear log file
-    clear_output()
+    init_log_file()
     if not S.PACKAGE_FOLDER:
         info("Unable to resolve current path for package.")
     info("==== Loading '%s' package ====" % S.PACKAGE_FOLDER)
