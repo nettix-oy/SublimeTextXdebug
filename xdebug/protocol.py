@@ -188,6 +188,9 @@ class Protocol(object):
 
         xml_object = xml.dom.minidom.parseString(data)
         pretty_xml_string = xml_object.toprettyxml('    ')
+        # Clean up CDATA sections, which minidom doesn't pretty-print nicely
+        pretty_xml_string = re.sub(r'>\n<!\[CDATA\[', '><![CDATA[', pretty_xml_string)
+        pretty_xml_string = re.sub(r'\]\]> +</',      ']]></',      pretty_xml_string)
         debug('[Response data] %s' % pretty_xml_string)
 
         # Create XML document object
