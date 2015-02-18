@@ -73,9 +73,12 @@ class Protocol(object):
     read_size = 1024
 
     def __init__(self):
+        debug('(Protocol.__init__) Begin')
         # Set port number to listen for response
         self.port = get_value(S.KEY_PORT, S.DEFAULT_PORT)
+        debug('(Protocol.__init__) Port = %s' % self.port)
         self.clear()
+        debug('(Protocol.__init__) Done')
 
     def transaction_id():
         """
