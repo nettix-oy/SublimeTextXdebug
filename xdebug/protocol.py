@@ -1,6 +1,7 @@
 import re
 import socket
 import sys
+import xml.dom.minidom
 
 # Helper module
 try:
@@ -173,11 +174,9 @@ class Protocol(object):
         # Get result data from debugger engine and verify length of response
         data = self.read_data()
 
-        # Show debug output
-        debug('[Response data] %s' % data)
-
         # Return data string
         if return_string:
+            debug('[Response data] %s' % data)
             return data
 
         # Remove special character quoting
@@ -186,6 +185,10 @@ class Protocol(object):
 
         # Replace invalid XML characters
         data = ILLEGAL_XML_RE.sub('?', data)
+
+        xml_object = xml.dom.minidom.parseString(data)
+        pretty_xml_string = xml_object.toprettyxml('    ')
+        debug('[Response data] %s' % pretty_xml_string)
 
         # Create XML document object
         document = ET.fromstring(data)
