@@ -14,9 +14,11 @@ from .config import get_value
 
 
 def clear_output():
-    # Clear previous output file and configure logging module
+    # Configure logging module
     output_file = os.path.join(sublime.packages_path(), 'User', S.FILE_LOG_OUTPUT)
-    logging.basicConfig(filename=output_file, filemode='w', level=logging.DEBUG, format='[%(asctime)s] %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
+    # The values for filemode are the same as for PHP's fopen()
+    # a = Open for writing only; place the file pointer at the end of the file. If the file does not exist, attempt to create it.
+    logging.basicConfig(filename=output_file, filemode='a', level=logging.DEBUG, format='[%(asctime)s] %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
 
 
 def debug(message=None):
