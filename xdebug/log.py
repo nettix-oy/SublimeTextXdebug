@@ -3,6 +3,8 @@ import sublime
 import logging
 import os
 
+import inspect
+
 # Settings variables
 try:
     from . import settings as S
@@ -25,11 +27,18 @@ def debug(message=None):
     if not get_value(S.KEY_DEBUG) or message is None:
         return
     # Write message to output file
-    logging.debug(message)
+    logging.debug(get_message_indentation() + message)
 
 
 def info(message=None):
     if message is None:
         return
     # Write message to output file
-    logging.info(message)
+    logging.info(get_message_indentation() + message)
+
+
+def get_message_indentation():
+    stack_depth = len(inspect.stack())
+    stack_depth -= 3  # Stack depth is always at least 3
+    indentation = '    ' * stack_depth
+    return indentation
