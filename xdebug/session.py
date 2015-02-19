@@ -197,8 +197,12 @@ class SocketHandler(threading.Thread):
 
 
     def evaluate(self, expression):
+        debug('(SocketHandler.evaluate) Begin (%s)' % self.name)
         if not expression or not is_connected():
+            debug('(SocketHandler.evaluate) No expression or not connected')
+            debug('(SocketHandler.evaluate) Done (%s)' % self.name)
             return
+        debug('(SocketHandler.evaluate) Expression = %s' % expression)
         # Send 'eval' command to debugger engine with code to evaluate
         S.SESSION.send(dbgp.EVAL, expression=expression)
         if get_value(S.KEY_PRETTY_OUTPUT):
@@ -210,6 +214,7 @@ class SocketHandler(threading.Thread):
 
         # Show response data in output panel
         self.timeout(lambda: show_panel_content(response))
+        debug('(SocketHandler.evaluate) Done (%s)' % self.name)
 
 
     def execute(self, command):
