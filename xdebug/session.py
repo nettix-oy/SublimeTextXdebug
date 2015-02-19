@@ -218,9 +218,14 @@ class SocketHandler(threading.Thread):
 
 
     def execute(self, command):
+        debug('(SocketHandler.execute) Begin (%s)' % self.name)
         # Do not execute if no command is set
         if not command or not is_connected():
+            debug('(SocketHandler.execute) No command or not connected')
+            debug('(SocketHandler.execute) Done (%s)' % self.name)
             return
+
+        debug('(SocketHandler.execute) Command = %s' % command)
 
         # Send command to debugger engine
         S.SESSION.send(command)
@@ -267,6 +272,7 @@ class SocketHandler(threading.Thread):
 
         # On breakpoint get context variables and stack history
         if response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_BREAK:
+            debug('(SocketHandler.execute) Response status = %s' % response.get(dbgp.ATTRIBUTE_STATUS))
             # Context variables
             context = self.get_context_values()
             self.timeout(lambda: show_content(DATA_CONTEXT, context))
@@ -280,12 +286,18 @@ class SocketHandler(threading.Thread):
 
         # Reload session when session stopped, by reaching end of file or interruption
         if response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPING or response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPED:
+            debug('(SocketHandler.execute) Response status = %s' % response.get(dbgp.ATTRIBUTE_STATUS))
+            debug('(SocketHandler.execute) Stopping session')
             self.run_command('xdebug_session_stop', {'restart': True})
+            debug('(SocketHandler.execute) Restarting session')
             self.run_command('xdebug_session_start', {'restart': True})
+            debug('(SocketHandler.execute) Finished executing file on server. Reload page to continue debugging.')
             self.status_message('Xdebug: Finished executing file on server. Reload page to continue debugging.')
 
         # Render breakpoint markers
         self.timeout(lambda: render_regions())
+
+        debug('(SocketHandler.execute) Done (%s)' % self.name)
 
 
     def get_context_values(self):
