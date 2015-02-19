@@ -269,8 +269,11 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
             util.launch_browser()
 
         # Start thread which will run method that listens for response on configured port
-        log.debug('(XdebugSessionStartCommand.run) Starting thread to listen for response from debugger engine')
-        threading.Thread(target=self.listen).start()
+        log.debug('(XdebugSessionStartCommand.run) Creating thread to listen for response from debugger engine')
+        listening_thread = threading.Thread(target=self.listen)
+        log.debug('(XdebugSessionStartCommand.run) Created %s' % listening_thread.name)
+        listening_thread.start()
+        log.debug('(XdebugSessionStartCommand.run) Started %s' % listening_thread.name)
         log.debug('(XdebugSessionStartCommand.run) Done')
 
     def listen(self):
