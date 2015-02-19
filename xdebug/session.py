@@ -110,8 +110,12 @@ def connection_error(message):
 class SocketHandler(threading.Thread):
     def __init__(self, action, **options):
         threading.Thread.__init__(self)
+        debug('(SocketHandler.__init__) Begin')
+        thread_name = self.name  # SocketHandler is a subclass of threading.Thread
+        debug('(SocketHandler.__init__) Created %s, Action = %s, Options = %s' % (thread_name, action, options))
         self.action = action
         self.options = options
+        debug('(SocketHandler.__init__) Done')
 
     def get_option(self, option, default_value=None):
         if option in self.options.keys():
