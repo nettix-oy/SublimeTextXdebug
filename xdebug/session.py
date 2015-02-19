@@ -153,9 +153,14 @@ class SocketHandler(threading.Thread):
         sublime.set_timeout(function, 0)
 
     def run(self):
+        thread_name = self.name  # SocketHandler is a subclass of threading.Thread
+        debug('(SocketHandler.run) Begin: this is %s' % thread_name)
         # Make sure an action is defined
         if not self.action:
+            debug('(SocketHandler.run) No action defined')
+            debug('(SocketHandler.run) Done: terminating %s' % thread_name)
             return
+        debug('(SocketHandler.run) Action = %s' % self.action)
         try:
             S.SESSION_BUSY = True
             # Evaluate
@@ -188,6 +193,7 @@ class SocketHandler(threading.Thread):
             self.timeout(lambda: connection_error("%s" % e))
         finally:
             S.SESSION_BUSY = False
+        debug('(SocketHandler.run) Done: terminating %s' % thread_name)
 
 
     def evaluate(self, expression):
