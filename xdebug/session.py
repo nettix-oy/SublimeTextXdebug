@@ -54,12 +54,26 @@ def is_connected(show_status=False):
     Keyword arguments:
     show_status -- Show message why client is not connected in status bar.
     """
+    if show_status:
+        debug('(session.is_connected) Begin')
+
     if S.SESSION and S.SESSION.connected:
+        if show_status:
+            debug('(session.is_connected) Client is connected to debugger engine')
+            debug('(session.is_connected) Done')
         return True
+
     elif S.SESSION and show_status:
+        debug('(session.is_connected) Not connected: Waiting for response from debugger engine')
         sublime.status_message('Xdebug: Waiting for response from debugger engine.')
+
     elif show_status:
+        debug('(session.is_connected) Not connected: No Xdebug session running')
         sublime.status_message('Xdebug: No Xdebug session running.')
+
+    if show_status:
+        debug('(session.is_connected) Done')
+
     return False
 
 
