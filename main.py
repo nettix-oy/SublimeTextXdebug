@@ -286,10 +286,12 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
         log.debug('(XdebugSessionStartCommand.listen) Done: terminating %s' % threading.currentThread().name)
 
     def connected(self):
+        log.debug('(XdebugSessionStartCommand.connected) Begin (on main thread)')
         sublime.set_timeout(lambda: sublime.status_message('Xdebug: Connected'), 100)
 
         async_session = session.SocketHandler(session.ACTION_INIT)
         async_session.start()
+        log.debug('(XdebugSessionStartCommand.connected) Done')
 
     def is_enabled(self):
         if S.SESSION:
