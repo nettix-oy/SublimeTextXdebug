@@ -308,9 +308,17 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
 
 class XdebugSessionRestartCommand(sublime_plugin.WindowCommand):
     def run(self):
+        log.debug('(XdebugSessionRestartCommand.run) Begin')
+
+        log.debug('(XdebugSessionRestartCommand.run) Stopping session')
         self.window.run_command('xdebug_session_stop', {'restart': True})
+
+        log.debug('(XdebugSessionRestartCommand.run) Restarting session')
         self.window.run_command('xdebug_session_start', {'restart': True})
+
+        log.debug('(XdebugSessionRestartCommand.run) Restarted debugging session. Reload page to continue debugging.')
         sublime.set_timeout(lambda: sublime.status_message('Xdebug: Restarted debugging session. Reload page to continue debugging.'), 100)
+        log.debug('(XdebugSessionRestartCommand.run) Done')
 
     def is_enabled(self):
         if S.SESSION:
