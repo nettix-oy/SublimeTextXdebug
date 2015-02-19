@@ -336,10 +336,12 @@ class XdebugSessionStopCommand(sublime_plugin.WindowCommand):
     Stop Xdebug session, close connection and stop listening to debugger engine.
     """
     def run(self, close_windows=False, launch_browser=False, restart=False):
+        log.debug('(XdebugSessionStopCommand.run) Begin')
         try:
+            log.debug('(XdebugSessionStopCommand.run) Trying to clear session')
             S.SESSION.clear()
         except:
-            pass
+            log.debug('(XdebugSessionStopCommand.run) Failed to clear session')
         finally:
             S.SESSION = None
             S.SESSION_BUSY = False
@@ -365,6 +367,7 @@ class XdebugSessionStopCommand(sublime_plugin.WindowCommand):
             self.window.run_command('xdebug_layout')
         # Render breakpoint markers
         V.render_regions()
+        log.debug('(XdebugSessionStopCommand.run) Done')
 
     def is_enabled(self):
         if S.SESSION:
