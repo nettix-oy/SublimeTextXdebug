@@ -249,6 +249,7 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
     Start Xdebug session, listen for request response from debugger engine.
     """
     def run(self, launch_browser=False, restart=False):
+        log.debug('(XdebugSessionStartCommand.run) Begin')
         # Define new session with DBGp protocol
         S.SESSION = protocol.Protocol()
         S.SESSION_BUSY = False
@@ -268,7 +269,9 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
             util.launch_browser()
 
         # Start thread which will run method that listens for response on configured port
+        log.debug('(XdebugSessionStartCommand.run) Starting thread to listen for response from debugger engine')
         threading.Thread(target=self.listen).start()
+        log.debug('(XdebugSessionStartCommand.run) Done')
 
     def listen(self):
         # Start listening for response from debugger engine
