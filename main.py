@@ -277,11 +277,13 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
         log.debug('(XdebugSessionStartCommand.run) Done')
 
     def listen(self):
+        log.debug('(XdebugSessionStartCommand.listen) Begin: this is %s' % threading.currentThread().name)
         # Start listening for response from debugger engine
         S.SESSION.listen()
         # On connect run method which handles connection
         if S.SESSION and S.SESSION.connected:
             sublime.set_timeout(self.connected, 0)
+        log.debug('(XdebugSessionStartCommand.listen) Done: terminating %s' % threading.currentThread().name)
 
     def connected(self):
         sublime.set_timeout(lambda: sublime.status_message('Xdebug: Connected'), 100)
