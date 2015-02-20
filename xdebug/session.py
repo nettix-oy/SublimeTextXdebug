@@ -2,6 +2,7 @@ import sublime
 
 import sys
 import threading
+import traceback
 
 # Helper module
 try:
@@ -349,6 +350,7 @@ class SocketHandler(threading.Thread):
         """
         Evaluate all watch expressions in current context.
         """
+        debug('(SocketHandler.get_watch_values) Begin')
         for index, item in enumerate(S.WATCH):
             # Reset value for watch expression
             S.WATCH[index]['value'] = None
@@ -357,15 +359,20 @@ class SocketHandler(threading.Thread):
             if is_connected():
                 if item['enabled']:
                     watch_value = None
+                    debug('(SocketHandler.get_watch_values) Evaluating %s' % item['expression'])
                     try:
                         S.SESSION.send(dbgp.EVAL, expression=item['expression'])
                         response = S.SESSION.read()
 
                         watch_value = get_response_properties(response, item['expression'])
                     except ProtocolConnectionException:
-                        pass
+                        e = traceback.format_exc()
+                        debug('(SocketHandler.get_watch_values) Exception while evaluating %s' % item['expression'])
+                        debug('(SocketHandler.get_watch_values) %s' % e)
 
                     S.WATCH[index]['value'] = watch_value
+
+        debug('(SocketHandler.get_watch_values) Done')
 
 
     def init(self):
