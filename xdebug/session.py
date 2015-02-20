@@ -254,7 +254,7 @@ class SocketHandler(threading.Thread):
                 exception = child.get(dbgp.BREAKPOINT_EXCEPTION)
                 filename = get_real_path(fileuri)
                 if (exception):
-                    info(exception + ': ' + child.text)
+                    info('(SocketHandler.execute) Breakpoint exception: ' + exception + ': ' + child.text)
                     # Remember Exception name and first line of message
                     S.BREAKPOINT_EXCEPTION = { 'name': exception, 'message': child.text.split('\n')[0], 'filename': fileuri, 'lineno': lineno }
 
@@ -270,7 +270,7 @@ class SocketHandler(threading.Thread):
                     return
                 # Show debug/status output
                 self.status_message('Xdebug: Breakpoint')
-                info('Break: ' + filename + ':' + lineno)
+                info('(SocketHandler.execute) Breakpoint: ' + filename + ':' + lineno)
                 # Store line number of breakpoint for displaying region marker
                 S.BREAKPOINT_ROW = { 'filename': filename, 'lineno': lineno }
                 # Focus/Open file window view
