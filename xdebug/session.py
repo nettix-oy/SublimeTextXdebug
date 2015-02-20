@@ -85,14 +85,18 @@ def connection_error(message):
     Keyword arguments:
     message -- Exception/reason of connection error/loss.
     """
+    debug('(session.connection_error) Begin')
     sublime.error_message("Please restart Xdebug debugging session.\nDisconnected from Xdebug debugger engine.\n" + message)
-    info("Connection lost with debugger engine.")
-    debug(message)
+    info('(session.connection_error) Connection lost with debugger engine')
+    debug('(session.connection_error) %s' % message)
     # Reset connection
     try:
+        debug('(session.connection_error) Clearing session')
         S.SESSION.clear()
     except:
-        pass
+        e = traceback.format_exc()
+        debug('(session.connection_error) Failed to clear session')
+        debug('(session.connection_error) %s' % e)
     finally:
         S.SESSION = None
         S.SESSION_BUSY = False
@@ -106,6 +110,7 @@ def connection_error(message):
     sublime.active_window().run_command('xdebug_layout')
     # Render breakpoint markers
     render_regions()
+    debug('(session.connection_error) Done')
 
 
 class SocketHandler(threading.Thread):
