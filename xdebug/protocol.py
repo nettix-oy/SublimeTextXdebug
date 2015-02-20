@@ -289,10 +289,12 @@ class Protocol(object):
 
             # Close socket server
             try:
-                debug('(Protocol.listen) Trying to close server socket')
+                debug('(Protocol.listen) Closing server socket')
                 server.close()
             except:
+                e = traceback.format_exc()
                 debug('(Protocol.listen) Failed to close server socket')
+                debug('(Protocol.listen) %s' % e)
             server = None
 
             # Return socket connection
