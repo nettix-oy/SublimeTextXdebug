@@ -4,6 +4,7 @@ import sublime_plugin
 import os
 import sys
 import threading
+import traceback
 
 # Load modules
 try:
@@ -338,10 +339,12 @@ class XdebugSessionStopCommand(sublime_plugin.WindowCommand):
     def run(self, close_windows=False, launch_browser=False, restart=False):
         log.debug('(XdebugSessionStopCommand.run) Begin')
         try:
-            log.debug('(XdebugSessionStopCommand.run) Trying to clear session')
+            log.debug('(XdebugSessionStopCommand.run) Clearing session')
             S.SESSION.clear()
         except:
+            e = traceback.format_exc()
             log.debug('(XdebugSessionStopCommand.run) Failed to clear session')
+            log.debug('(XdebugSessionStopCommand.run) %s' % e)
         finally:
             S.SESSION = None
             S.SESSION_BUSY = False
