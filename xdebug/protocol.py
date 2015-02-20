@@ -1,6 +1,7 @@
 import re
 import socket
 import sys
+import traceback
 import xml.dom.minidom
 
 # Helper module
@@ -108,10 +109,12 @@ class Protocol(object):
         self.listening = False
         del self.transaction_id
         try:
-            debug('(Protocol.clear) Trying to close socket')
+            debug('(Protocol.clear) Closing socket')
             self.socket.close()
         except:
+            e = traceback.format_exc()
             debug('(Protocol.clear) Failed to close socket')
+            debug('(Protocol.clear) %s' % e)
         debug('(Protocol.clear) Done')
         self.socket = None
 
