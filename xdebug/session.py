@@ -199,7 +199,7 @@ class SocketHandler(threading.Thread):
 
     def evaluate(self, expression):
         debug('(SocketHandler.evaluate) Begin (%s)' % self.name)
-        if not expression or not is_connected():
+        if not expression or not is_connected(show_status=True):
             debug('(SocketHandler.evaluate) No expression or not connected')
             debug('(SocketHandler.evaluate) Done (%s)' % self.name)
             return
@@ -221,7 +221,7 @@ class SocketHandler(threading.Thread):
     def execute(self, command):
         debug('(SocketHandler.execute) Begin (%s)' % self.name)
         # Do not execute if no command is set
-        if not command or not is_connected():
+        if not command or not is_connected(show_status=True):
             debug('(SocketHandler.execute) No command or not connected')
             debug('(SocketHandler.execute) Done (%s)' % self.name)
             return
@@ -376,7 +376,7 @@ class SocketHandler(threading.Thread):
 
 
     def init(self):
-        if not is_connected():
+        if not is_connected(show_status=True):
             return
 
         # Connection initialization
