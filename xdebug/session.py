@@ -376,47 +376,58 @@ class SocketHandler(threading.Thread):
 
 
     def init(self):
+        debug('(SocketHandler.init) Begin (%s)' % self.name)
         if not is_connected(show_status=True):
+            debug('(SocketHandler.init) Client is not connected to debugger engine')
+            debug('(SocketHandler.init) Done (%s)' % self.name)
             return
 
         # Connection initialization
+        debug('(SocketHandler.init) Connection initialisation')
         init = S.SESSION.read()
 
         # More detailed internal information on properties
+        debug('(SocketHandler.init) Asking for more detailed internal information on properties')
         S.SESSION.send(dbgp.FEATURE_SET, n='show_hidden', v=1)
         response = S.SESSION.read()
 
         # Set max children limit
         max_children = get_value(S.KEY_MAX_CHILDREN)
         if max_children is not False and max_children is not True and (H.is_number(max_children) or H.is_digit(max_children)):
+            debug('(SocketHandler.init) Setting max children limit to %s' % max_children)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXCHILDREN, v=max_children)
             response = S.SESSION.read()
 
         # Set max data limit
         max_data = get_value(S.KEY_MAX_DATA)
         if max_data is not False and max_data is not True and (H.is_number(max_data) or H.is_digit(max_data)):
+            debug('(SocketHandler.init) Setting max data limit to %s' % max_data)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXDATA, v=max_data)
             response = S.SESSION.read()
 
         # Set max depth limit
         max_depth = get_value(S.KEY_MAX_DEPTH)
         if max_depth is not False and max_depth is not True and (H.is_number(max_depth) or H.is_digit(max_depth)):
+            debug('(SocketHandler.init) Setting max depth limit to %s' % max_depth)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXDEPTH, v=max_depth)
             response = S.SESSION.read()
 
         # Set breakpoints for files
+        debug('(SocketHandler.init) Setting breakpoints for files')
         for filename, breakpoint_data in S.BREAKPOINT.items():
             if breakpoint_data:
                 for lineno, bp in breakpoint_data.items():
                     if bp['enabled']:
                         self.set_breakpoint(filename, lineno, bp['expression'])
-                        debug('breakpoint_set: ' + filename + ':' + lineno)
+                        debug('(SocketHandler.init) Breakpoint set: ' + filename + ':' + lineno)
 
         # Set breakpoints for exceptions
+        debug('(SocketHandler.init) Setting breakpoints for exceptions')
         break_on_exception = get_value(S.KEY_BREAK_ON_EXCEPTION)
         if isinstance(break_on_exception, list):
             for exception_name in break_on_exception:
                 self.set_exception(exception_name)
+                debug('(SocketHandler.init) Exception breakpoint set: ' + exception_name)
 
         # Determine if client should break at first line on connect
         if get_value(S.KEY_BREAK_ON_START):
@@ -425,7 +436,7 @@ class SocketHandler(threading.Thread):
             filename = get_real_path(fileuri)
             # Show debug/status output
             self.status_message('Xdebug: Break on start')
-            info('Break on start: ' + filename )
+            info('(SocketHandler.init) Break on start: ' + filename)
             # Store line number of breakpoint for displaying region marker
             S.BREAKPOINT_ROW = { 'filename': filename, 'lineno': 1 }
             # Focus/Open file window view
@@ -447,6 +458,8 @@ class SocketHandler(threading.Thread):
         else:
             # Tell script to run it's process
             self.run_command('xdebug_execute', {'command': 'run'})
+
+        debug('(SocketHandler.init) Done (%s)' % self.name)
 
 
     def remove_breakpoint(self, breakpoint_id):
