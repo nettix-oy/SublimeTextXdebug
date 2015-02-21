@@ -159,7 +159,7 @@ class Protocol(object):
                 data, self.buffer = self.buffer.split('\x00', 1)
                 return data
             except:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 raise ProtocolConnectionException(e)
         else:
             raise ProtocolConnectionException("Xdebug is not connected")
@@ -241,7 +241,7 @@ class Protocol(object):
         try:
             self.socket.send(H.data_write(command + '\x00'))
         except:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             raise ProtocolConnectionException(e)
 
     def listen(self):
@@ -265,7 +265,7 @@ class Protocol(object):
                 self.listening = True
                 self.socket = None
             except:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 raise ProtocolConnectionException(e)
 
             # Accept incoming connection on configured port

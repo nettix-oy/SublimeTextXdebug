@@ -195,7 +195,7 @@ class SocketHandler(threading.Thread):
                 self.watch_expression()
         # Show dialog on connection error
         except ProtocolConnectionException:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             self.timeout(lambda: connection_error("%s" % e))
         finally:
             S.SESSION_BUSY = False
@@ -326,7 +326,7 @@ class SocketHandler(threading.Thread):
             response = S.SESSION.read()
             context.update(get_response_properties(response))
         except ProtocolConnectionException:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             self.timeout(lambda: connection_error("%s" % e))
 
         # Store context variables in session
@@ -346,7 +346,7 @@ class SocketHandler(threading.Thread):
                 S.SESSION.send(dbgp.STACK_GET)
                 response = S.SESSION.read()
             except ProtocolConnectionException:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 self.timeout(lambda: connection_error("%s" % e))
         return generate_stack_output(response)
 
