@@ -434,6 +434,11 @@ class SocketHandler(threading.Thread):
                 self.set_exception(exception_name)
                 debug('(SocketHandler.init) Exception breakpoint set: ' + exception_name)
 
+        # List breakpoints (write to debug log)
+        debug('(SocketHandler.init) Listing breakpoints')
+        S.SESSION.send(dbgp.BREAKPOINT_LIST)
+        response = S.SESSION.read()
+
         # Determine if client should break at first line on connect
         if get_value(S.KEY_BREAK_ON_START):
             # Get init attribute values
