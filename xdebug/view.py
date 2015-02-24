@@ -100,6 +100,7 @@ def generate_context_output(context, indent=0, parent=''):
     for variable in context.values():
         has_children = False
         property_text = ''
+        full_name = ''
         if variable['name']:
             full_name = variable['name']
             if parent:
