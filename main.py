@@ -614,9 +614,9 @@ class XdebugLayoutCommand(sublime_plugin.WindowCommand):
             return
         # Reset data in debugging related windows
         V.show_content(V.DATA_BREAKPOINT)
-        V.show_content(V.DATA_CONTEXT)
         V.show_content(V.DATA_STACK)
         V.show_content(V.DATA_WATCH)
+        V.show_content(V.DATA_CONTEXT)
         panel = window.get_output_panel('xdebug')
         panel.run_command("xdebug_view_update")
         # Close output panel
