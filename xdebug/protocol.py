@@ -1,6 +1,8 @@
 import re
 import socket
 import sys
+import traceback
+import xml.dom.minidom
 
 # Helper module
 try:
@@ -72,9 +74,12 @@ class Protocol(object):
     read_size = 1024
 
     def __init__(self):
+        debug('(Protocol.__init__) Begin')
         # Set port number to listen for response
         self.port = get_value(S.KEY_PORT, S.DEFAULT_PORT)
+        debug('(Protocol.__init__) Port = %s' % self.port)
         self.clear()
+        debug('(Protocol.__init__) Done')
 
     def transaction_id():
         """
@@ -98,14 +103,19 @@ class Protocol(object):
         """
         Clear variables, reset transaction_id, close socket connection.
         """
+        debug('(Protocol.clear) Begin')
         self.buffer = ''
         self.connected = False
         self.listening = False
         del self.transaction_id
         try:
+            debug('(Protocol.clear) Closing socket')
             self.socket.close()
         except:
-            pass
+            e = traceback.format_exc()
+            debug('(Protocol.clear) Failed to close socket')
+            debug('(Protocol.clear) %s' % e)
+        debug('(Protocol.clear) Done')
         self.socket = None
 
     def unescape(self, string):
@@ -149,7 +159,7 @@ class Protocol(object):
                 data, self.buffer = self.buffer.split('\x00', 1)
                 return data
             except:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 raise ProtocolConnectionException(e)
         else:
             raise ProtocolConnectionException("Xdebug is not connected")
@@ -173,11 +183,9 @@ class Protocol(object):
         # Get result data from debugger engine and verify length of response
         data = self.read_data()
 
-        # Show debug output
-        debug('[Response data] %s' % data)
-
         # Return data string
         if return_string:
+            debug('[Response data] %s' % data)
             return data
 
         # Remove special character quoting
@@ -186,6 +194,13 @@ class Protocol(object):
 
         # Replace invalid XML characters
         data = ILLEGAL_XML_RE.sub('?', data)
+
+        xml_object = xml.dom.minidom.parseString(data)
+        pretty_xml_string = xml_object.toprettyxml('    ')
+        # Clean up CDATA sections, which minidom doesn't pretty-print nicely
+        pretty_xml_string = re.sub(r'>\n<!\[CDATA\[', '><![CDATA[', pretty_xml_string)
+        pretty_xml_string = re.sub(r'\]\]> +</',      ']]></',      pretty_xml_string)
+        debug('[Response data] %s' % pretty_xml_string)
 
         # Create XML document object
         document = ET.fromstring(data)
@@ -226,14 +241,16 @@ class Protocol(object):
         try:
             self.socket.send(H.data_write(command + '\x00'))
         except:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             raise ProtocolConnectionException(e)
 
     def listen(self):
         """
         Create socket server which listens for connection on configured port.
         """
+        debug('(Protocol.listen) Begin')
         # Create socket server
+        debug('(Protocol.listen) Creating server socket')
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         if server:
@@ -241,38 +258,47 @@ class Protocol(object):
             try:
                 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server.settimeout(1)
+                debug('(Protocol.listen) Binding to port %s' % self.port)
                 server.bind(('', self.port))
+                debug('(Protocol.listen) Starting to listen for connections')
                 server.listen(1)
                 self.listening = True
                 self.socket = None
             except:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 raise ProtocolConnectionException(e)
 
             # Accept incoming connection on configured port
             while self.listening:
                 try:
+                    debug('(Protocol.listen) Trying to accept a client socket connection')
                     self.socket, address = server.accept()
                     self.listening = False
                 except socket.timeout:
-                    pass
+                    debug('(Protocol.listen) Timed out while trying to accept a client socket connection')
 
             # Check if a connection has been made
             if self.socket:
+                debug('(Protocol.listen) Successfully accepted a client socket connection')
                 self.connected = True
                 self.socket.settimeout(None)
             else:
+                debug('(Protocol.listen) Failed to accept a client socket connection')
                 self.connected = False
                 self.listening = False
 
             # Close socket server
             try:
+                debug('(Protocol.listen) Closing server socket')
                 server.close()
             except:
-                pass
+                e = traceback.format_exc()
+                debug('(Protocol.listen) Failed to close server socket')
+                debug('(Protocol.listen) %s' % e)
             server = None
 
             # Return socket connection
+            debug('(Protocol.listen) Done')
             return self.socket
         else:
             raise ProtocolConnectionException('Could not create socket server.')

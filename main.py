@@ -4,6 +4,7 @@ import sublime_plugin
 import os
 import sys
 import threading
+import traceback
 
 # Load modules
 try:
@@ -249,6 +250,7 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
     Start Xdebug session, listen for request response from debugger engine.
     """
     def run(self, launch_browser=False, restart=False):
+        log.debug('(XdebugSessionStartCommand.run) Begin')
         # Define new session with DBGp protocol
         S.SESSION = protocol.Protocol()
         S.SESSION_BUSY = False
@@ -268,20 +270,29 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
             util.launch_browser()
 
         # Start thread which will run method that listens for response on configured port
-        threading.Thread(target=self.listen).start()
+        log.debug('(XdebugSessionStartCommand.run) Creating thread to listen for response from debugger engine')
+        listening_thread = threading.Thread(target=self.listen)
+        log.debug('(XdebugSessionStartCommand.run) Created %s' % listening_thread.name)
+        listening_thread.start()
+        log.debug('(XdebugSessionStartCommand.run) Started %s' % listening_thread.name)
+        log.debug('(XdebugSessionStartCommand.run) Done')
 
     def listen(self):
+        log.debug('(XdebugSessionStartCommand.listen) Begin: this is %s' % threading.currentThread().name)
         # Start listening for response from debugger engine
         S.SESSION.listen()
         # On connect run method which handles connection
         if S.SESSION and S.SESSION.connected:
             sublime.set_timeout(self.connected, 0)
+        log.debug('(XdebugSessionStartCommand.listen) Done: terminating %s' % threading.currentThread().name)
 
     def connected(self):
+        log.debug('(XdebugSessionStartCommand.connected) Begin (on main thread)')
         sublime.set_timeout(lambda: sublime.status_message('Xdebug: Connected'), 100)
 
         async_session = session.SocketHandler(session.ACTION_INIT)
         async_session.start()
+        log.debug('(XdebugSessionStartCommand.connected) Done')
 
     def is_enabled(self):
         if S.SESSION:
@@ -298,9 +309,17 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
 
 class XdebugSessionRestartCommand(sublime_plugin.WindowCommand):
     def run(self):
+        log.debug('(XdebugSessionRestartCommand.run) Begin')
+
+        log.debug('(XdebugSessionRestartCommand.run) Stopping session')
         self.window.run_command('xdebug_session_stop', {'restart': True})
+
+        log.debug('(XdebugSessionRestartCommand.run) Restarting session')
         self.window.run_command('xdebug_session_start', {'restart': True})
+
+        log.debug('(XdebugSessionRestartCommand.run) Restarted debugging session. Reload page to continue debugging.')
         sublime.set_timeout(lambda: sublime.status_message('Xdebug: Restarted debugging session. Reload page to continue debugging.'), 100)
+        log.debug('(XdebugSessionRestartCommand.run) Done')
 
     def is_enabled(self):
         if S.SESSION:
@@ -318,10 +337,14 @@ class XdebugSessionStopCommand(sublime_plugin.WindowCommand):
     Stop Xdebug session, close connection and stop listening to debugger engine.
     """
     def run(self, close_windows=False, launch_browser=False, restart=False):
+        log.debug('(XdebugSessionStopCommand.run) Begin')
         try:
+            log.debug('(XdebugSessionStopCommand.run) Clearing session')
             S.SESSION.clear()
         except:
-            pass
+            e = traceback.format_exc()
+            log.debug('(XdebugSessionStopCommand.run) Failed to clear session')
+            log.debug('(XdebugSessionStopCommand.run) %s' % e)
         finally:
             S.SESSION = None
             S.SESSION_BUSY = False
@@ -347,6 +370,7 @@ class XdebugSessionStopCommand(sublime_plugin.WindowCommand):
             self.window.run_command('xdebug_layout')
         # Render breakpoint markers
         V.render_regions()
+        log.debug('(XdebugSessionStopCommand.run) Done')
 
     def is_enabled(self):
         if S.SESSION:
