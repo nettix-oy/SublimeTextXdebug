@@ -279,11 +279,20 @@ class XdebugSessionStartCommand(sublime_plugin.WindowCommand):
 
     def listen(self):
         log.debug('(XdebugSessionStartCommand.listen) Begin: this is %s' % threading.currentThread().name)
-        # Start listening for response from debugger engine
-        S.SESSION.listen()
-        # On connect run method which handles connection
-        if S.SESSION and S.SESSION.connected:
-            sublime.set_timeout(self.connected, 0)
+        try:
+            # Start listening for response from debugger engine
+            S.SESSION.listen()
+            # On connect run method which handles connection
+            if S.SESSION and S.SESSION.connected:
+                sublime.set_timeout(self.connected, 0)
+        except:
+            e = traceback.format_exc()
+            log.debug('(XdebugSessionStartCommand.listen) Error while trying to accept a connection')
+            log.debug('(XdebugSessionStartCommand.listen) %s' % e)
+            exc_type, exc_value = sys.exc_info()[:2]
+            sublime.error_message('Sorry, something went wrong while trying to accept a connection from the debugger engine:\n%s: %s' % (exc_type.__name__, exc_value))
+            # sublime.set_timeout(lambda: self.window.run_command('xdebug_session_stop', {'close_windows': True}), 100)
+
         log.debug('(XdebugSessionStartCommand.listen) Done: terminating %s' % threading.currentThread().name)
 
     def connected(self):
