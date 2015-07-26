@@ -289,15 +289,13 @@ class SocketHandler(threading.Thread):
             # Watch expressions
             self.watch_expression()
 
-        # Reload session when session stopped, by reaching end of file or interruption
+        # Session is stopping or has stopped, by reaching end of file or interruption
         if response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPING or response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPED:
             debug('(SocketHandler.execute) Response status = %s' % response.get(dbgp.ATTRIBUTE_STATUS))
             debug('(SocketHandler.execute) Stopping session')
-            self.run_command('xdebug_session_stop', {'restart': True})
-            debug('(SocketHandler.execute) Restarting session')
-            self.run_command('xdebug_session_start', {'restart': True})
-            debug('(SocketHandler.execute) Finished executing file on server. Reload page to continue debugging.')
-            self.status_message('Xdebug: Finished executing file on server. Reload page to continue debugging.')
+            self.run_command('xdebug_session_stop', {'restart': False})
+            debug('(SocketHandler.execute) Finished executing file on server.')
+            self.status_message('Xdebug: Finished executing file on server.')
 
         # Render breakpoint markers
         self.timeout(lambda: render_regions())
