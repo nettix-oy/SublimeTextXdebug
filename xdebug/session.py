@@ -2,6 +2,7 @@ import sublime
 
 import sys
 import threading
+import traceback
 
 # Helper module
 try:
@@ -54,12 +55,26 @@ def is_connected(show_status=False):
     Keyword arguments:
     show_status -- Show message why client is not connected in status bar.
     """
+    if show_status:
+        debug('(session.is_connected) Begin')
+
     if S.SESSION and S.SESSION.connected:
+        if show_status:
+            debug('(session.is_connected) Client is connected to debugger engine')
+            debug('(session.is_connected) Done')
         return True
+
     elif S.SESSION and show_status:
+        debug('(session.is_connected) Not connected: Waiting for response from debugger engine')
         sublime.status_message('Xdebug: Waiting for response from debugger engine.')
+
     elif show_status:
+        debug('(session.is_connected) Not connected: No Xdebug session running')
         sublime.status_message('Xdebug: No Xdebug session running.')
+
+    if show_status:
+        debug('(session.is_connected) Done')
+
     return False
 
 
@@ -70,14 +85,18 @@ def connection_error(message):
     Keyword arguments:
     message -- Exception/reason of connection error/loss.
     """
+    debug('(session.connection_error) Begin')
     sublime.error_message("Please restart Xdebug debugging session.\nDisconnected from Xdebug debugger engine.\n" + message)
-    info("Connection lost with debugger engine.")
-    debug(message)
+    info('(session.connection_error) Connection lost with debugger engine')
+    debug('(session.connection_error) %s' % message)
     # Reset connection
     try:
+        debug('(session.connection_error) Clearing session')
         S.SESSION.clear()
     except:
-        pass
+        e = traceback.format_exc()
+        debug('(session.connection_error) Failed to clear session')
+        debug('(session.connection_error) %s' % e)
     finally:
         S.SESSION = None
         S.SESSION_BUSY = False
@@ -91,13 +110,18 @@ def connection_error(message):
     sublime.active_window().run_command('xdebug_layout')
     # Render breakpoint markers
     render_regions()
+    debug('(session.connection_error) Done')
 
 
 class SocketHandler(threading.Thread):
     def __init__(self, action, **options):
         threading.Thread.__init__(self)
+        debug('(SocketHandler.__init__) Begin')
+        thread_name = self.name  # SocketHandler is a subclass of threading.Thread
+        debug('(SocketHandler.__init__) Created %s, Action = %s, Options = %s' % (thread_name, action, options))
         self.action = action
         self.options = options
+        debug('(SocketHandler.__init__) Done')
 
     def get_option(self, option, default_value=None):
         if option in self.options.keys():
@@ -135,9 +159,14 @@ class SocketHandler(threading.Thread):
         sublime.set_timeout(function, 0)
 
     def run(self):
+        thread_name = self.name  # SocketHandler is a subclass of threading.Thread
+        debug('(SocketHandler.run) Begin: this is %s' % thread_name)
         # Make sure an action is defined
         if not self.action:
+            debug('(SocketHandler.run) No action defined')
+            debug('(SocketHandler.run) Done: terminating %s' % thread_name)
             return
+        debug('(SocketHandler.run) Action = %s' % self.action)
         try:
             S.SESSION_BUSY = True
             # Evaluate
@@ -166,15 +195,20 @@ class SocketHandler(threading.Thread):
                 self.watch_expression()
         # Show dialog on connection error
         except ProtocolConnectionException:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             self.timeout(lambda: connection_error("%s" % e))
         finally:
             S.SESSION_BUSY = False
+        debug('(SocketHandler.run) Done: terminating %s' % thread_name)
 
 
     def evaluate(self, expression):
-        if not expression or not is_connected():
+        debug('(SocketHandler.evaluate) Begin (%s)' % self.name)
+        if not expression or not is_connected(show_status=True):
+            debug('(SocketHandler.evaluate) No expression or not connected')
+            debug('(SocketHandler.evaluate) Done (%s)' % self.name)
             return
+        debug('(SocketHandler.evaluate) Expression = %s' % expression)
         # Send 'eval' command to debugger engine with code to evaluate
         S.SESSION.send(dbgp.EVAL, expression=expression)
         if get_value(S.KEY_PRETTY_OUTPUT):
@@ -186,12 +220,18 @@ class SocketHandler(threading.Thread):
 
         # Show response data in output panel
         self.timeout(lambda: show_panel_content(response))
+        debug('(SocketHandler.evaluate) Done (%s)' % self.name)
 
 
     def execute(self, command):
+        debug('(SocketHandler.execute) Begin (%s)' % self.name)
         # Do not execute if no command is set
-        if not command or not is_connected():
+        if not command or not is_connected(show_status=True):
+            debug('(SocketHandler.execute) No command or not connected')
+            debug('(SocketHandler.execute) Done (%s)' % self.name)
             return
+
+        debug('(SocketHandler.execute) Command = %s' % command)
 
         # Send command to debugger engine
         S.SESSION.send(command)
@@ -201,7 +241,6 @@ class SocketHandler(threading.Thread):
         S.BREAKPOINT_EXCEPTION = None
         S.BREAKPOINT_ROW = None
         S.CONTEXT_DATA.clear()
-        self.watch_expression()
         # Set debug layout
         self.run_command('xdebug_layout')
 
@@ -214,7 +253,7 @@ class SocketHandler(threading.Thread):
                 exception = child.get(dbgp.BREAKPOINT_EXCEPTION)
                 filename = get_real_path(fileuri)
                 if (exception):
-                    info(exception + ': ' + child.text)
+                    info('(SocketHandler.execute) Breakpoint exception: ' + exception + ': ' + child.text)
                     # Remember Exception name and first line of message
                     S.BREAKPOINT_EXCEPTION = { 'name': exception, 'message': child.text.split('\n')[0], 'filename': fileuri, 'lineno': lineno }
 
@@ -230,7 +269,7 @@ class SocketHandler(threading.Thread):
                     return
                 # Show debug/status output
                 self.status_message('Xdebug: Breakpoint')
-                info('Break: ' + filename + ':' + lineno)
+                info('(SocketHandler.execute) Breakpoint: ' + filename + ':' + lineno)
                 # Store line number of breakpoint for displaying region marker
                 S.BREAKPOINT_ROW = { 'filename': filename, 'lineno': lineno }
                 # Focus/Open file window view
@@ -238,6 +277,7 @@ class SocketHandler(threading.Thread):
 
         # On breakpoint get context variables and stack history
         if response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_BREAK:
+            debug('(SocketHandler.execute) Response status = %s' % response.get(dbgp.ATTRIBUTE_STATUS))
             # Context variables
             context = self.get_context_values()
             self.timeout(lambda: show_content(DATA_CONTEXT, context))
@@ -249,14 +289,18 @@ class SocketHandler(threading.Thread):
             # Watch expressions
             self.watch_expression()
 
-        # Reload session when session stopped, by reaching end of file or interruption
+        # Session is stopping or has stopped, by reaching end of file or interruption
         if response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPING or response.get(dbgp.ATTRIBUTE_STATUS) == dbgp.STATUS_STOPPED:
-            self.run_command('xdebug_session_stop', {'restart': True})
-            self.run_command('xdebug_session_start', {'restart': True})
-            self.status_message('Xdebug: Finished executing file on server. Reload page to continue debugging.')
+            debug('(SocketHandler.execute) Response status = %s' % response.get(dbgp.ATTRIBUTE_STATUS))
+            debug('(SocketHandler.execute) Stopping session')
+            self.run_command('xdebug_session_stop', {'restart': False})
+            debug('(SocketHandler.execute) Finished executing file on server.')
+            self.status_message('Xdebug: Finished executing file on server.')
 
         # Render breakpoint markers
         self.timeout(lambda: render_regions())
+
+        debug('(SocketHandler.execute) Done (%s)' % self.name)
 
 
     def get_context_values(self):
@@ -279,7 +323,7 @@ class SocketHandler(threading.Thread):
             response = S.SESSION.read()
             context.update(get_response_properties(response))
         except ProtocolConnectionException:
-            e = sys.exc_info()[1]
+            e = traceback.format_exc()
             self.timeout(lambda: connection_error("%s" % e))
 
         # Store context variables in session
@@ -299,7 +343,7 @@ class SocketHandler(threading.Thread):
                 S.SESSION.send(dbgp.STACK_GET)
                 response = S.SESSION.read()
             except ProtocolConnectionException:
-                e = sys.exc_info()[1]
+                e = traceback.format_exc()
                 self.timeout(lambda: connection_error("%s" % e))
         return generate_stack_output(response)
 
@@ -308,6 +352,7 @@ class SocketHandler(threading.Thread):
         """
         Evaluate all watch expressions in current context.
         """
+        debug('(SocketHandler.get_watch_values) Begin')
         for index, item in enumerate(S.WATCH):
             # Reset value for watch expression
             S.WATCH[index]['value'] = None
@@ -316,59 +361,80 @@ class SocketHandler(threading.Thread):
             if is_connected():
                 if item['enabled']:
                     watch_value = None
+                    debug('(SocketHandler.get_watch_values) Evaluating %s' % item['expression'])
                     try:
                         S.SESSION.send(dbgp.EVAL, expression=item['expression'])
                         response = S.SESSION.read()
 
                         watch_value = get_response_properties(response, item['expression'])
                     except ProtocolConnectionException:
-                        pass
+                        e = traceback.format_exc()
+                        debug('(SocketHandler.get_watch_values) Exception while evaluating %s' % item['expression'])
+                        debug('(SocketHandler.get_watch_values) %s' % e)
 
                     S.WATCH[index]['value'] = watch_value
 
+        debug('(SocketHandler.get_watch_values) Done')
+
 
     def init(self):
-        if not is_connected():
+        debug('(SocketHandler.init) Begin (%s)' % self.name)
+        if not is_connected(show_status=True):
+            debug('(SocketHandler.init) Client is not connected to debugger engine')
+            debug('(SocketHandler.init) Done (%s)' % self.name)
             return
 
         # Connection initialization
+        debug('(SocketHandler.init) Connection initialisation')
         init = S.SESSION.read()
 
         # More detailed internal information on properties
+        debug('(SocketHandler.init) Asking for more detailed internal information on properties')
         S.SESSION.send(dbgp.FEATURE_SET, n='show_hidden', v=1)
         response = S.SESSION.read()
 
         # Set max children limit
         max_children = get_value(S.KEY_MAX_CHILDREN)
         if max_children is not False and max_children is not True and (H.is_number(max_children) or H.is_digit(max_children)):
+            debug('(SocketHandler.init) Setting max children limit to %s' % max_children)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXCHILDREN, v=max_children)
             response = S.SESSION.read()
 
         # Set max data limit
         max_data = get_value(S.KEY_MAX_DATA)
         if max_data is not False and max_data is not True and (H.is_number(max_data) or H.is_digit(max_data)):
+            debug('(SocketHandler.init) Setting max data limit to %s' % max_data)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXDATA, v=max_data)
             response = S.SESSION.read()
 
         # Set max depth limit
         max_depth = get_value(S.KEY_MAX_DEPTH)
         if max_depth is not False and max_depth is not True and (H.is_number(max_depth) or H.is_digit(max_depth)):
+            debug('(SocketHandler.init) Setting max depth limit to %s' % max_depth)
             S.SESSION.send(dbgp.FEATURE_SET, n=dbgp.FEATURE_NAME_MAXDEPTH, v=max_depth)
             response = S.SESSION.read()
 
         # Set breakpoints for files
+        debug('(SocketHandler.init) Setting breakpoints for files')
         for filename, breakpoint_data in S.BREAKPOINT.items():
             if breakpoint_data:
                 for lineno, bp in breakpoint_data.items():
                     if bp['enabled']:
                         self.set_breakpoint(filename, lineno, bp['expression'])
-                        debug('breakpoint_set: ' + filename + ':' + lineno)
+                        debug('(SocketHandler.init) Breakpoint set: ' + filename + ':' + lineno)
 
         # Set breakpoints for exceptions
+        debug('(SocketHandler.init) Setting breakpoints for exceptions')
         break_on_exception = get_value(S.KEY_BREAK_ON_EXCEPTION)
         if isinstance(break_on_exception, list):
             for exception_name in break_on_exception:
                 self.set_exception(exception_name)
+                debug('(SocketHandler.init) Exception breakpoint set: ' + exception_name)
+
+        # List breakpoints (write to debug log)
+        debug('(SocketHandler.init) Listing breakpoints')
+        S.SESSION.send(dbgp.BREAKPOINT_LIST)
+        response = S.SESSION.read()
 
         # Determine if client should break at first line on connect
         if get_value(S.KEY_BREAK_ON_START):
@@ -377,7 +443,7 @@ class SocketHandler(threading.Thread):
             filename = get_real_path(fileuri)
             # Show debug/status output
             self.status_message('Xdebug: Break on start')
-            info('Break on start: ' + filename )
+            info('(SocketHandler.init) Break on start: ' + filename)
             # Store line number of breakpoint for displaying region marker
             S.BREAKPOINT_ROW = { 'filename': filename, 'lineno': 1 }
             # Focus/Open file window view
@@ -399,6 +465,8 @@ class SocketHandler(threading.Thread):
         else:
             # Tell script to run it's process
             self.run_command('xdebug_execute', {'command': 'run'})
+
+        debug('(SocketHandler.init) Done (%s)' % self.name)
 
 
     def remove_breakpoint(self, breakpoint_id):

@@ -71,7 +71,7 @@
     ],
 
     // Always close debug windows and restore layout on session stop.
-    "close_on_stop": false,
+    "close_on_stop": true,
 
     // Do not show possible password values in context output.
     "hide_password": false,
@@ -91,21 +91,22 @@
     "disable_layout": false,
 
     // Window layout that is being used when debugging.
-    "debug_layout" : {
-        "cols": [0.0, 0.5, 1.0],
-        "rows": [0.0, 0.7, 1.0],
-        "cells": [[0, 0, 2, 1], [0, 1, 1, 2], [1, 1, 2, 2]]
+    "debug_layout": {
+        "cols": [0.0, 0.6, 1.0],
+        "rows": [0.0, 0.65, 1.0],
+        "cells": [
+         // [x,y,  x,y]      Coordinates of top-left and bottom-right corners
+            [0,0,  1,1],  // Group 0
+            [1,0,  2,1],  // Group 1
+            [0,1,  2,2]   // Group 2
+        ]
     },
 
     // Group and index positions for debug views.
-    "breakpoint_group": 2,
-    "breakpoint_index": 1,
-    "context_group": 1,
-    "context_index": 0,
-    "stack_group": 2,
-    "stack_index": 0,
-    "watch_group": 1,
-    "watch_index": 1,
+    "context_group":    1,  "context_index":    0,
+    "watch_group":      1,  "watch_index":      1,
+    "stack_group":      2,  "stack_index":      0,
+    "breakpoint_group": 2,  "breakpoint_index": 1,
 
     // Custom gutter icons for indicating current line or enabled/disabled breakpoints.
     //
@@ -131,5 +132,5 @@
     // Show detailed log information about communication
     // between debugger engine and Sublime Text.
     // Log can be found at Packages/User/Xdebug.log
-    "debug": false
+    "debug": true
 }
