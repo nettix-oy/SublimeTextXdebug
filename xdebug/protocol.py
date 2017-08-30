@@ -78,6 +78,7 @@ class Protocol(object):
         # Set port number to listen for response
         self.port = get_value(S.KEY_PORT, S.DEFAULT_PORT)
         debug('(Protocol.__init__) Port = %s' % self.port)
+        self.host = get_value(S.KEY_HOST, S.DEFAULT_HOST)
         self.clear()
         debug('(Protocol.__init__) Done')
 
@@ -258,8 +259,8 @@ class Protocol(object):
             try:
                 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server.settimeout(1)
-                debug('(Protocol.listen) Binding to port %s' % self.port)
-                server.bind(('', self.port))
+                debug('(Protocol.listen) Binding to %s:%s' % (self.host, self.port))
+                server.bind((self.host, self.port))
                 debug('(Protocol.listen) Starting to listen for connections')
                 server.listen(1)
                 self.listening = True

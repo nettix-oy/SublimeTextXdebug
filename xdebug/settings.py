@@ -1,4 +1,5 @@
 DEFAULT_PORT = 9000
+DEFAULT_HOST = '0.0.0.0'
 DEFAULT_IDE_KEY = 'sublime.xdebug'
 
 PACKAGE_PATH = None
@@ -16,6 +17,7 @@ KEY_PATH_MAPPING = "path_mapping"
 KEY_URL = "url"
 KEY_IDE_KEY = "ide_key"
 KEY_PORT = "port"
+KEY_HOST = "host"
 KEY_SUPER_GLOBALS = "super_globals"
 KEY_MAX_CHILDREN = "max_children"
 KEY_MAX_DATA = "max_data"
@@ -92,6 +94,7 @@ CONFIG_KEYS = [
 	KEY_URL,
 	KEY_IDE_KEY,
 	KEY_PORT,
+	KEY_HOST,
 	KEY_SUPER_GLOBALS,
 	KEY_MAX_CHILDREN,
 	KEY_MAX_DATA,
