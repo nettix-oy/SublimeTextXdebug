@@ -664,6 +664,10 @@ def show_at_row(view, row=None):
             row_region = rows_to_region(row)[0].a
             # Scroll the view to row
             view.show_at_center(row_region)
+            # Select line
+            regions = view.sel()
+            regions.clear()
+            regions.add(sublime.Region(row_region, row_region))
         except:
             # When defining row_region index could be out of bounds
             pass
