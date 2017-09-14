@@ -592,8 +592,15 @@ class XdebugWatchCommand(sublime_plugin.WindowCommand):
         pass
 
     def set_expression(self):
+        # Get selection
+        view = sublime.active_window().active_view()
+        if view is None:
+            expression = ''
+        else:
+            region = view.sel()[0]
+            expression = view.substr(region)
         # Show user input for setting watch expression
-        self.window.show_input_panel('Watch expression', '', self.on_done, self.on_change, self.on_cancel)
+        self.window.show_input_panel('Watch expression', expression, self.on_done, self.on_change, self.on_cancel)
 
     def update_view(self):
         async_session = session.SocketHandler(session.ACTION_WATCH, check_watch_view=True)
